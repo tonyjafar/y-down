@@ -73,7 +73,7 @@ class YoutubeDownloader:
                 l.pack(fill=X, padx=5)
 
                 Button(root, text='Open Folder', command=self.open_folder
-                       ).grid(row=2, column=2, sticky='ws')
+                       ).grid(row=0, column=2, sticky='ws')
             else:
                 l.destroy()
                 pass
