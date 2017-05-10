@@ -4,6 +4,7 @@ from tkinter import messagebox
 import pafy
 import os
 import platform
+import pydub
 import youtube_dl
 
 
@@ -66,8 +67,9 @@ class YoutubeDownloader:
                             os.chdir(self.dir_name)
                             old_name = video.title + '.m4a'
                             new_name = video.title + '.mp3'
-                            # TODO using Converting Package
-                            os.rename(old_name, new_name)
+                            wma = pydub.AudioSegment.from_file(old_name, "m4a")
+                            wma.export(new_name, "mp3")
+                            os.remove(old_name)
                 l.destroy()
                 l = Label(self.frame, text='Success!!', fg='green')
                 l.pack(fill=X, padx=5)
