@@ -23,6 +23,7 @@ class YoutubeDownloader:
         self.r1.grid(row=1, column=0, sticky='wn')
         self.r2 = Radiobutton(root, text='Video', variable=self.var, value=1)
         self.r2.grid(row=1, column=1, sticky='wn')
+        self.b = None
 
     def open_folder(self):
         if platform.system() == 'Windows':
@@ -40,7 +41,7 @@ class YoutubeDownloader:
         if folder:
             self.dir_name = folder
         else:
-            pass
+            self.b.destroy()
 
     def download_url(self):
         try:
@@ -74,8 +75,8 @@ class YoutubeDownloader:
                 l = Label(self.frame, text='Success!!', fg='green')
                 l.pack(fill=X, padx=5)
 
-                Button(root, text='Open Folder', command=self.open_folder
-                       ).grid(row=0, column=2, sticky='ws')
+                self.b = Button(root, text='Open Folder', command=self.open_folder)
+                self.b.grid(row=0, column=2, sticky='ws')
             else:
                 l.destroy()
                 pass
