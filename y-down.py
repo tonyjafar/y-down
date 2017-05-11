@@ -121,6 +121,7 @@ def select_all(event=None):
 
 def download(event=None):
     myapp.download_url()
+    return 'break'
 
 
 file_menu.add_command(label='Download', accelerator='Control+D', command=download)
@@ -139,5 +140,6 @@ e1.bind('<Control-A>', select_all)
 e1.bind('<Control-a>', select_all)
 e1.bind('<Control-D>', download)
 e1.bind('<Control-d>', download)
+e1.bind('<Return>', download)
 root.mainloop()
 
