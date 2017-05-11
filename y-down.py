@@ -41,7 +41,8 @@ class YoutubeDownloader:
         if folder:
             self.dir_name = folder
         else:
-            self.b.destroy()
+            if self.b:
+                self.b.destroy()
 
     def download_url(self):
         try:
