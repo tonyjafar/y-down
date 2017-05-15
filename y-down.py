@@ -69,11 +69,14 @@ class YoutubeDownloader:
                             os.chdir(self.dir_name)
                             old_name = video.title + '.m4a'
                             new_name = video.title + '.mp3'
-                            wma = pydub.AudioSegment.from_file(old_name, "m4a")
-                            os.chdir(self.dir_name)
-                            wma.export(new_name, "mp3")
-                            os.chdir(self.dir_name)
-                            os.remove(old_name)
+                            if platform.system() == 'Windows':
+                                os.rename(old_name, new_name)
+                            else:
+                                wma = pydub.AudioSegment.from_file(old_name, "m4a")
+                                os.chdir(self.dir_name)
+                                wma.export(new_name, "mp3")
+                                os.chdir(self.dir_name)
+                                os.remove(old_name)
                 l.destroy()
                 l = Label(self.frame, text='Success!!', fg='green')
                 l.pack(fill=X, padx=5)
