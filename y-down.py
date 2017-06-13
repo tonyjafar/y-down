@@ -7,6 +7,7 @@ import platform
 import pydub
 import configparser
 import threading
+import time
 import youtube_dl
 
 
@@ -83,7 +84,11 @@ class YoutubeDownloader:
                     t.start()
                 for x in threads:
                     x.join()
-
+                while True:
+                    if t.is_alive():
+                        time.sleep(1)
+                    else:
+                        break
                 if len(self.errors) > 0:
                     messagebox.showerror("Error", "the following links failed\n%s" % self.errors)
                     l.destroy()
@@ -182,7 +187,8 @@ class ThreadedTask(threading.Thread):
                         wma.export(new_name, "mp3")
                         os.chdir(self.dir_name)
                         os.remove(old_name)
-        except:
+        except Exception as e:
+            print(e)
             myapp.update_list(self.url)
 
 root = Tk()
