@@ -61,6 +61,9 @@ class YoutubeDownloader:
     def update_list(self, link):
         self.errors.append(link)
 
+    def get_var(self):
+        return self.var.get()
+
     def download_url_from_file(self):
         try:
             self.frame.destroy()
@@ -78,8 +81,12 @@ class YoutubeDownloader:
                 config.read(self.config_file)
                 for name, link in config['links'].items():
                     my_links[name] = link
+                if self.var.get() == 1:
+                    var = 1
+                else:
+                    var = 0
                 for name in my_links:
-                    t = ThreadedTask(my_links[name], self.dir_name)
+                    t = ThreadedTask(my_links[name], self.dir_name, var)
                     threads += [t]
                     t.start()
                 for x in threads:
@@ -163,31 +170,37 @@ class YoutubeDownloader:
 
 
 class ThreadedTask(threading.Thread):
-    def __init__(self, url, dir_name):
+    def __init__(self, url, dir_name, var):
         threading.Thread.__init__(self)
         self.url = url
         self.dir_name = dir_name
+        self.var = var
 
     def run(self):
         try:
             video = pafy.new(self.url)
             audio = video.audiostreams
-            for a in audio:
-                if a.extension == 'm4a':
-                    myAudio = a
-                    myAudio.download(filepath=self.dir_name)
-                    os.chdir(self.dir_name)
-                    old_name = video.title + '.m4a'
-                    new_name = video.title + '.mp3'
-                    if platform.system() == 'Windows':
-                        os.rename(old_name, new_name)
-                    else:
-                        wma = pydub.AudioSegment.from_file(old_name, "m4a")
+            if self.var == 1:
+                best = video.getbest()
+                best.download(filepath=self.dir_name)
+            else:
+                for a in audio:
+                    if a.extension == 'm4a':
+                        myAudio = a
+                        myAudio.download(filepath=self.dir_name)
                         os.chdir(self.dir_name)
-                        wma.export(new_name, "mp3")
-                        os.chdir(self.dir_name)
-                        os.remove(old_name)
-        except Exception:
+                        old_name = video.title + '.m4a'
+                        new_name = video.title + '.mp3'
+                        if platform.system() == 'Windows':
+                            os.rename(old_name, new_name)
+                        else:
+                            wma = pydub.AudioSegment.from_file(old_name, "m4a")
+                            os.chdir(self.dir_name)
+                            wma.export(new_name, "mp3")
+                            os.chdir(self.dir_name)
+                            os.remove(old_name)
+        except Exception as e:
+            print(e)
             myapp.update_list(self.url)
 
 root = Tk()
