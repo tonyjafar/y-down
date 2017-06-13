@@ -5,6 +5,7 @@ import pafy
 import os
 import platform
 import pydub
+import configparser
 import youtube_dl
 
 
@@ -14,7 +15,7 @@ import youtube_dl
 
 
 class YoutubeDownloader:
-    def __init__(self, dir_name=None):
+    def __init__(self, dir_name=None, config_file=None):
         self.dir_name = dir_name
         self.frame = Frame(root, height=25, relief=SUNKEN)
         self.frame.grid(row=3, columnspan=10, sticky="w")
@@ -24,6 +25,7 @@ class YoutubeDownloader:
         self.r2 = Radiobutton(root, text='Video', variable=self.var, value=1)
         self.r2.grid(row=1, column=1, sticky='wn')
         self.b = None
+        self.config_file = config_file
 
     def open_folder(self):
         if platform.system() == 'Windows':
@@ -43,6 +45,74 @@ class YoutubeDownloader:
         else:
             if self.b:
                 self.b.destroy()
+
+    def read_config(self):
+        self.config_file = None
+        file = filedialog.askopenfilename(initialdir=os.path.expanduser('~'))
+        if file:
+            self.config_file = file
+        else:
+            if self.b:
+                self.b.destroy()
+
+    def download_url_from_file(self):
+        try:
+            self.frame.destroy()
+            self.frame = Frame(root, height=25, relief=SUNKEN)
+            self.frame.grid(row=3, columnspan=10, sticky="w")
+            l = Label(self.frame, text='Downloading...', fg='blue')
+            l.pack(fill=X, padx=5)
+            my_links = {}
+            self.read_config()
+            self.save_file()
+
+            if self.dir_name and self.config_file:
+                config = configparser.ConfigParser()
+                config.read(self.config_file)
+                for name, link in config['links'].items():
+                    my_links[name] = link
+                for name in my_links:
+                    link = my_links[name]
+                    video = pafy.new(link)
+                    audio = video.audiostreams
+
+                    if self.var.get() == 1:
+                        best = video.getbest()
+                        best.download(filepath=self.dir_name)
+                    else:
+                        for a in audio:
+                            if a.extension == 'm4a':
+                                myAudio = a
+                                myAudio.download(filepath=self.dir_name)
+                                os.chdir(self.dir_name)
+                                old_name = video.title + '.m4a'
+                                new_name = video.title + '.mp3'
+                                if platform.system() == 'Windows':
+                                    os.rename(old_name, new_name)
+                                else:
+                                    wma = pydub.AudioSegment.from_file(old_name, "m4a")
+                                    os.chdir(self.dir_name)
+                                    wma.export(new_name, "mp3")
+                                    os.chdir(self.dir_name)
+                                    os.remove(old_name)
+                l.destroy()
+                l = Label(self.frame, text='Success!!', fg='green')
+                l.pack(fill=X, padx=5)
+
+                self.b = Button(root, text='Open Folder', command=self.open_folder)
+                self.b.grid(row=0, column=2, sticky='ws')
+            else:
+                l.destroy()
+                pass
+        except ValueError:
+            messagebox.showerror("Error", "%s is not valid" %link)
+            l.destroy()
+            Label(self.frame, text='Failed!!', fg='red').pack(fill=X, padx=5)
+        except:
+            messagebox.showerror("Error", "Please check the Config file and your Internet connection\n"
+                                          "or ask the supplier for updated Version")
+            l.destroy()
+            Label(self.frame, text='Failed!!', fg='red').pack(fill=X, padx=5)
 
     def download_url(self):
         try:
@@ -136,6 +206,8 @@ Label(root, text='Enter URL', fg='blue').grid(row=0, column=0, sticky='w')
 e1 = Entry(root, width=100)
 e1.grid(row=0, column=1, sticky='we')
 e1.focus()
+Button(root, text='File', command=myapp.download_url_from_file
+       ).grid(row=0, column=2, sticky='ws')
 Button(root, text='Download', command=myapp.download_url
        ).grid(row=2, column=0, sticky='ws')
 Button(root, text='Exit', command=exit_app
