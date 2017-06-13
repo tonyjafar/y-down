@@ -199,8 +199,7 @@ class ThreadedTask(threading.Thread):
                             wma.export(new_name, "mp3")
                             os.chdir(self.dir_name)
                             os.remove(old_name)
-        except Exception as e:
-            print(e)
+        except:
             myapp.update_list(self.url)
 
 root = Tk()
