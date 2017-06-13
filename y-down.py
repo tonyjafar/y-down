@@ -189,7 +189,7 @@ class ThreadedTask(threading.Thread):
                         myAudio = a
                         myAudio.download(filepath=self.dir_name)
                         os.chdir(self.dir_name)
-                        old_name = video.title + '.m4a'
+                        old_name = pafy.new(self.url, ydl_opts='-i').title + '.m4a'
                         new_name = video.title + '.mp3'
                         if platform.system() == 'Windows':
                             os.rename(old_name, new_name)
