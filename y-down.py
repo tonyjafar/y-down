@@ -6,6 +6,7 @@ import os
 import platform
 import pydub
 import configparser
+import threading
 import youtube_dl
 
 
@@ -26,6 +27,7 @@ class YoutubeDownloader:
         self.r2.grid(row=1, column=1, sticky='wn')
         self.b = None
         self.config_file = config_file
+        self.errors = []
 
     def open_folder(self):
         if platform.system() == 'Windows':
@@ -55,6 +57,9 @@ class YoutubeDownloader:
             if self.b:
                 self.b.destroy()
 
+    def update_list(self, link):
+        self.errors.append(link)
+
     def download_url_from_file(self):
         try:
             self.frame.destroy()
@@ -65,6 +70,7 @@ class YoutubeDownloader:
             my_links = {}
             self.read_config()
             self.save_file()
+            threads = []
 
             if self.dir_name and self.config_file:
                 config = configparser.ConfigParser()
@@ -72,42 +78,26 @@ class YoutubeDownloader:
                 for name, link in config['links'].items():
                     my_links[name] = link
                 for name in my_links:
-                    link = my_links[name]
-                    video = pafy.new(link)
-                    audio = video.audiostreams
+                    t = ThreadedTask(my_links[name], self.dir_name)
+                    threads += [t]
+                    t.start()
+                for x in threads:
+                    x.join()
 
-                    if self.var.get() == 1:
-                        best = video.getbest()
-                        best.download(filepath=self.dir_name)
-                    else:
-                        for a in audio:
-                            if a.extension == 'm4a':
-                                myAudio = a
-                                myAudio.download(filepath=self.dir_name)
-                                os.chdir(self.dir_name)
-                                old_name = video.title + '.m4a'
-                                new_name = video.title + '.mp3'
-                                if platform.system() == 'Windows':
-                                    os.rename(old_name, new_name)
-                                else:
-                                    wma = pydub.AudioSegment.from_file(old_name, "m4a")
-                                    os.chdir(self.dir_name)
-                                    wma.export(new_name, "mp3")
-                                    os.chdir(self.dir_name)
-                                    os.remove(old_name)
-                l.destroy()
-                l = Label(self.frame, text='Success!!', fg='green')
-                l.pack(fill=X, padx=5)
+                if len(self.errors) > 0:
+                    messagebox.showerror("Error", "the following links failed\n%s" % self.errors)
+                    l.destroy()
+                    Label(self.frame, text='Failed!!', fg='red').pack(fill=X, padx=5)
+                else:
+                    l.destroy()
+                    l = Label(self.frame, text='Success!!', fg='green')
+                    l.pack(fill=X, padx=5)
 
-                self.b = Button(root, text='Open Folder', command=self.open_folder)
-                self.b.grid(row=0, column=2, sticky='ws')
+                    self.b = Button(root, text='Open Folder', command=self.open_folder)
+                    self.b.grid(row=0, column=3, sticky='ws')
             else:
                 l.destroy()
                 pass
-        except ValueError:
-            messagebox.showerror("Error", "%s is not valid" %link)
-            l.destroy()
-            Label(self.frame, text='Failed!!', fg='red').pack(fill=X, padx=5)
         except:
             messagebox.showerror("Error", "Please check the Config file and your Internet connection\n"
                                           "or ask the supplier for updated Version")
@@ -165,6 +155,35 @@ class YoutubeDownloader:
                                           "or ask the supplier for updated Version")
             l.destroy()
             Label(self.frame, text='Failed!!', fg='red').pack(fill=X, padx=5)
+
+
+class ThreadedTask(threading.Thread):
+    def __init__(self, url, dir_name):
+        threading.Thread.__init__(self)
+        self.url = url
+        self.dir_name = dir_name
+
+    def run(self):
+        try:
+            video = pafy.new(self.url)
+            audio = video.audiostreams
+            for a in audio:
+                if a.extension == 'm4a':
+                    myAudio = a
+                    myAudio.download(filepath=self.dir_name)
+                    os.chdir(self.dir_name)
+                    old_name = video.title + '.m4a'
+                    new_name = video.title + '.mp3'
+                    if platform.system() == 'Windows':
+                        os.rename(old_name, new_name)
+                    else:
+                        wma = pydub.AudioSegment.from_file(old_name, "m4a")
+                        os.chdir(self.dir_name)
+                        wma.export(new_name, "mp3")
+                        os.chdir(self.dir_name)
+                        os.remove(old_name)
+        except:
+            myapp.update_list(self.url)
 
 root = Tk()
 root.title('Youtube Downloader')
