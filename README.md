@@ -5,3 +5,4 @@
 2. for installing **pydub** refer to [pydub](https://github.com/jiaaro/pydub#dependencies)
 3. for compiling for windows **Pyinstaller.exe --onefile --windowed y-down.py**
 4. for **Pyinstaller** refer to [Pyinstaller](https://github.com/pyinstaller/pyinstaller)
+5. Download one file directly or multi-lines from config file.
