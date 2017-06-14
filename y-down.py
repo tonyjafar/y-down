@@ -29,6 +29,7 @@ class YoutubeDownloader:
         self.b = None
         self.config_file = config_file
         self.errors = []
+        self.win = None
 
     def open_folder(self):
         if platform.system() == 'Windows':
@@ -61,11 +62,20 @@ class YoutubeDownloader:
     def update_list(self, link):
         self.errors.append(link)
 
-    def get_var(self):
-        return self.var.get()
+    def ask_one_multi(self):
+        self.win = Toplevel()
+        self.win.wm_geometry('300x100')
+        self.win.focus()
+        self.win.title('What to do?')
+        message = 'Download one or multi links'
+        Label(self.win, text=message).pack()
+        Button(self.win, text='One link', command=self.download_url).pack(side=RIGHT)
+        Button(self.win, text='Multi links', command=self.download_url_from_file).pack(side=LEFT)
 
     def download_url_from_file(self):
         try:
+            if self.win:
+                self.win.destroy()
             self.frame.destroy()
             self.frame = Frame(root, height=25, relief=SUNKEN)
             self.frame.grid(row=3, columnspan=10, sticky="w")
@@ -118,6 +128,8 @@ class YoutubeDownloader:
 
     def download_url(self):
         try:
+            if self.win:
+                self.win.destroy()
             self.frame.destroy()
             self.frame = Frame(root, height=25, relief=SUNKEN)
             self.frame.grid(row=3, columnspan=10, sticky="w")
@@ -239,6 +251,11 @@ def download_from_file(event=None):
     myapp.download_url_from_file()
     return 'break'
 
+
+def ask_what_to_do(event=None):
+    myapp.ask_one_multi()
+    return 'break'
+
 file_menu.add_command(label='Download', accelerator='Control+D', command=download)
 file_menu.add_command(label='Insert Config File', accelerator='Control+I', command=download_from_file)
 about_menu.add_command(label='About', command=display_about)
@@ -260,6 +277,6 @@ e1.bind('<Control-D>', download)
 e1.bind('<Control-d>', download)
 e1.bind('<Control-I>', download_from_file)
 e1.bind('<Control-i>', download_from_file)
-e1.bind('<Return>', download)
+e1.bind('<Return>', ask_what_to_do)
 root.mainloop()
 
