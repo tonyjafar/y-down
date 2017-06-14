@@ -235,7 +235,12 @@ def download(event=None):
     return 'break'
 
 
+def download_from_file(event=None):
+    myapp.download_url_from_file()
+    return 'break'
+
 file_menu.add_command(label='Download', accelerator='Control+D', command=download)
+file_menu.add_command(label='Insert Config File', accelerator='Control+I', command=download_from_file)
 about_menu.add_command(label='About', command=display_about)
 myapp = YoutubeDownloader()
 Label(root, text='Enter URL', fg='blue').grid(row=0, column=0, sticky='w')
@@ -253,6 +258,8 @@ e1.bind('<Control-A>', select_all)
 e1.bind('<Control-a>', select_all)
 e1.bind('<Control-D>', download)
 e1.bind('<Control-d>', download)
+e1.bind('<Control-I>', download_from_file)
+e1.bind('<Control-i>', download_from_file)
 e1.bind('<Return>', download)
 root.mainloop()
 
