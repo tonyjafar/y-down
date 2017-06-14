@@ -69,8 +69,8 @@ class YoutubeDownloader:
         self.win.title('What to do?')
         message = 'Download one or multi links'
         Label(self.win, text=message).pack()
-        Button(self.win, text='One link', command=self.download_url).pack(side=RIGHT)
-        Button(self.win, text='Multi links', command=self.download_url_from_file).pack(side=LEFT)
+        Button(self.win, text='One link', command=self.download_url).pack(side=LEFT)
+        Button(self.win, text='Multi links', command=self.download_url_from_file).pack(side=RIGHT)
 
     def download_url_from_file(self):
         try:
@@ -82,9 +82,10 @@ class YoutubeDownloader:
             l = Label(self.frame, text='Downloading...', fg='blue')
             l.pack(fill=X, padx=5)
             my_links = {}
-            self.read_config()
-            self.save_file()
             threads = []
+            self.read_config()
+            if self.config_file:
+                self.save_file()
 
             if self.dir_name and self.config_file:
                 config = configparser.ConfigParser()
@@ -279,4 +280,3 @@ e1.bind('<Control-I>', download_from_file)
 e1.bind('<Control-i>', download_from_file)
 e1.bind('<Return>', ask_what_to_do)
 root.mainloop()
-
