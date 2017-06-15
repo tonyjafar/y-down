@@ -151,7 +151,10 @@ class YoutubeDownloader:
             self.p = multiprocessing.Process(target=run, args=(self.q, self.dir_name, var, self.errors))
             self.p_l.append(self.p)
             self.p.start()
-        root.after(500, self.process_queue)
+            root.after(500, self.process_queue)
+        else:
+            l.destroy()
+            pass
 
 
 def run(q, dir_name, var, errors):
