@@ -119,12 +119,12 @@ class YoutubeDownloader:
                 self.frame = Frame(root, height=25, relief=SUNKEN)
                 self.frame.grid(row=3, columnspan=10, sticky="w")
                 l = Label(self.frame, text='Failed!!!', fg='red')
+                l.pack(fill=X, padx=5)
             else:
                 self.frame.destroy()
                 self.frame = Frame(root, height=25, relief=SUNKEN)
                 self.frame.grid(row=3, columnspan=10, sticky="w")
                 l = Label(self.frame, text='Success!!!', fg='green')
-                l.pack(fill=X, padx=5)
                 l.pack(fill=X, padx=5)
                 self.b = Button(root, text='Open Folder', command=self.open_folder)
                 self.b.grid(row=0, column=3, sticky='ws')
