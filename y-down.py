@@ -154,20 +154,18 @@ class YoutubeDownloader:
                             os.chdir(self.dir_name)
                             old_name = video.title + '.m4a'
                             new_name = video.title + '.mp3'
-                            if platform.system() == 'Windows':
-                                os.rename(old_name, new_name)
-                            else:
-                                wma = pydub.AudioSegment.from_file(old_name, "m4a")
-                                os.chdir(self.dir_name)
-                                wma.export(new_name, "mp3")
-                                os.chdir(self.dir_name)
-                                os.remove(old_name)
+
+                            wma = pydub.AudioSegment.from_file(old_name, "m4a")
+                            os.chdir(self.dir_name)
+                            wma.export(new_name, "mp3")
+                            os.chdir(self.dir_name)
+                            os.remove(old_name)
                 l.destroy()
                 l = Label(self.frame, text='Success!!', fg='green')
                 l.pack(fill=X, padx=5)
 
                 self.b = Button(root, text='Open Folder', command=self.open_folder)
-                self.b.grid(row=0, column=2, sticky='ws')
+                self.b.grid(row=0, column=3, sticky='ws')
             else:
                 l.destroy()
                 pass
@@ -204,14 +202,11 @@ class ThreadedTask(threading.Thread):
                         os.chdir(self.dir_name)
                         old_name = pafy.new(self.url, ydl_opts='-i').title + '.m4a'
                         new_name = video.title + '.mp3'
-                        if platform.system() == 'Windows':
-                            os.rename(old_name, new_name)
-                        else:
-                            wma = pydub.AudioSegment.from_file(old_name, "m4a")
-                            os.chdir(self.dir_name)
-                            wma.export(new_name, "mp3")
-                            os.chdir(self.dir_name)
-                            os.remove(old_name)
+                        wma = pydub.AudioSegment.from_file(old_name, "m4a")
+                        os.chdir(self.dir_name)
+                        wma.export(new_name, "mp3")
+                        os.chdir(self.dir_name)
+                        os.remove(old_name)
         except:
             myapp.update_list(self.url)
 
