@@ -132,56 +132,26 @@ class YoutubeDownloader:
             root.after(500, self.process_queue)
 
     def download_url(self):
-        try:
-            if self.win:
-                self.win.destroy()
-            self.frame.destroy()
-            self.frame = Frame(root, height=25, relief=SUNKEN)
-            self.frame.grid(row=3, columnspan=10, sticky="w")
-            l = Label(self.frame, text='Downloading...', fg='blue')
-            l.pack(fill=X, padx=5)
-            self.save_file()
-
-            if self.dir_name:
-                myUrl = e1.get()
-                # get("1.0",'end-1c')
-                video = pafy.new(myUrl)
-                audio = video.audiostreams
-                if self.var.get() == 1:
-                    best = video.getbest()
-                    best.download(filepath=self.dir_name)
-                else:
-                    for a in audio:
-                        if a.extension == 'm4a':
-                            myAudio = a
-                            myAudio.download(filepath=self.dir_name)
-                            os.chdir(self.dir_name)
-                            old_name = video.title + '.m4a'
-                            new_name = video.title + '.mp3'
-
-                            wma = pydub.AudioSegment.from_file(old_name, "m4a")
-                            os.chdir(self.dir_name)
-                            wma.export(new_name, "mp3")
-                            os.chdir(self.dir_name)
-                            os.remove(old_name)
-                l.destroy()
-                l = Label(self.frame, text='Success!!', fg='green')
-                l.pack(fill=X, padx=5)
-
-                self.b = Button(root, text='Open Folder', command=self.open_folder)
-                self.b.grid(row=0, column=3, sticky='ws')
-            else:
-                l.destroy()
-                pass
-        except ValueError:
-            messagebox.showerror("Error", "Please enter a valid URL")
-            l.destroy()
-            Label(self.frame, text='Failed!!', fg='red').pack(fill=X, padx=5)
-        except:
-            messagebox.showerror("Error", "Please check the URL and your Internet connection\n"
-                                          "or ask the supplier for updated Version")
-            l.destroy()
-            Label(self.frame, text='Failed!!', fg='red').pack(fill=X, padx=5)
+        if self.win:
+            self.win.destroy()
+        self.frame.destroy()
+        self.frame = Frame(root, height=25, relief=SUNKEN)
+        self.frame.grid(row=3, columnspan=10, sticky="w")
+        l = Label(self.frame, text='Downloading...', fg='blue')
+        l.pack(fill=X, padx=5)
+        self.save_file()
+        if self.var.get() == 1:
+            var = 1
+        else:
+            var = 0
+        if self.dir_name:
+            myUrl = e1.get()
+            # get("1.0",'end-1c')
+            self.q.put(myUrl)
+            self.p = multiprocessing.Process(target=run, args=(self.q, self.dir_name, var, self.errors))
+            self.p_l.append(self.p)
+            self.p.start()
+        root.after(500, self.process_queue)
 
 
 def run(q, dir_name, var, errors):
