@@ -99,7 +99,7 @@ class YoutubeDownloader:
                 var = 0
             for name in my_links:
                 self.q.put(my_links[name])
-            for name in my_links:
+            for i in range(5):
                 self.p = multiprocessing.Process(target=run, args=(self.q, self.dir_name, var, self.errors))
                 self.p_l.append(self.p)
                 self.p.start()
