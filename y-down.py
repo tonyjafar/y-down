@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
+from tkinter import ttk
 import pafy
 import os
 import platform
@@ -18,7 +19,7 @@ import youtube_dl
 class YoutubeDownloader:
     def __init__(self, dir_name=None, config_file=None):
         self.dir_name = dir_name
-        self.frame = Frame(root, height=25, relief=SUNKEN)
+        self.frame = Frame(root, height=20, relief=SUNKEN)
         self.frame.grid(row=3, columnspan=10, sticky="w")
         self.var = IntVar()
         self.r1 = Radiobutton(root, text='Audio', variable=self.var, value=0)
@@ -34,6 +35,12 @@ class YoutubeDownloader:
         self.p_l = []
         self.manager = multiprocessing.Manager()
         self.errors = self.manager.list()
+        self.check_fun = None
+        self.proc_frame = Frame(root, width=100, relief=SUNKEN)
+        self.proc_frame.grid(row=4, columnspan=200, sticky='w')
+        self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal",
+                                        length=700)
+        self.progress.pack(fill=X, padx=5)
 
     def open_folder(self):
         if platform.system() == 'Windows':
@@ -84,15 +91,24 @@ class YoutubeDownloader:
         self.frame.grid(row=3, columnspan=10, sticky="w")
         l = Label(self.frame, text='Downloading...', fg='blue')
         l.pack(fill=X, padx=5)
+        self.proc_frame.destroy()
+        self.proc_frame = Frame(root, height=20, relief=SUNKEN)
+        self.proc_frame.grid(row=4, columnspan=200, sticky='w')
         my_links = {}
         self.read_config()
         if self.config_file:
             self.save_file()
         if self.dir_name and self.config_file:
+            del self.errors[:]
+            self.errors = self.manager.list()
+            self.check_fun = 1
             config = configparser.ConfigParser()
             config.read(self.config_file)
             for name, link in config['links'].items():
                 my_links[name] = link
+            self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal",
+                                            length=700)
+            self.progress.pack(fill=BOTH, padx=5)
             if self.var.get() == 1:
                 var = 1
             else:
@@ -100,31 +116,39 @@ class YoutubeDownloader:
             for name in my_links:
                 self.q.put(my_links[name])
             for i in range(5):
-                self.p = multiprocessing.Process(target=run, args=(self.q, self.dir_name, var, self.errors))
+                self.p = multiprocessing.Process(target=run, args=(self.q, self.dir_name, var, self.errors,
+                                                                   self.check_fun, my_links))
                 self.p_l.append(self.p)
                 self.p.start()
+            self.progress.start()
             root.after(500, self.process_queue)
         else:
             l.destroy()
             pass
-        
+
     def process_queue(self):
         if not self.p.is_alive():
             for p in self.p_l:
                 p.join()
             if len(self.errors) > 0:
                 self.errors = list(self.errors)
-                messagebox.showerror('Error', 'the following links failed\n%s' % self.errors)
+                if self.check_fun == 0:
+                    self.progress.stop()
+                    messagebox.showerror('Error', '%s' % self.errors[0])
+                else:
+                    self.progress.stop()
+                    messagebox.showerror('Error', 'the following links failed\n%s' % self.errors)
                 self.frame.destroy()
                 self.frame = Frame(root, height=25, relief=SUNKEN)
                 self.frame.grid(row=3, columnspan=10, sticky="w")
                 l = Label(self.frame, text='Failed!!!', fg='red')
+                l.pack(fill=X, padx=5)
             else:
+                self.progress.stop()
                 self.frame.destroy()
                 self.frame = Frame(root, height=25, relief=SUNKEN)
                 self.frame.grid(row=3, columnspan=10, sticky="w")
                 l = Label(self.frame, text='Success!!!', fg='green')
-                l.pack(fill=X, padx=5)
                 l.pack(fill=X, padx=5)
                 self.b = Button(root, text='Open Folder', command=self.open_folder)
                 self.b.grid(row=0, column=3, sticky='ws')
@@ -139,30 +163,44 @@ class YoutubeDownloader:
         self.frame.grid(row=3, columnspan=10, sticky="w")
         l = Label(self.frame, text='Downloading...', fg='blue')
         l.pack(fill=X, padx=5)
+        self.proc_frame.destroy()
+        self.proc_frame = Frame(root, width=100, relief=SUNKEN)
+        self.proc_frame.grid(row=4, columnspan=200, sticky='w')
+        self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal",
+                                        length=700)
+        self.progress.pack(fill=BOTH, padx=5)
         self.save_file()
         if self.var.get() == 1:
             var = 1
         else:
             var = 0
         if self.dir_name:
+            del self.errors[:]
+            self.errors = self.manager.list()
+            self.check_fun = 0
             myUrl = e1.get()
             # get("1.0",'end-1c')
             self.q.put(myUrl)
-            self.p = multiprocessing.Process(target=run, args=(self.q, self.dir_name, var, self.errors))
+            self.p = multiprocessing.Process(target=run, args=(self.q, self.dir_name, var, self.errors, self.check_fun))
             self.p_l.append(self.p)
             self.p.start()
+            self.progress.start()
             root.after(500, self.process_queue)
         else:
             l.destroy()
             pass
 
 
-def run(q, dir_name, var, errors):
+def run(q, dir_name, var, errors, check_fun, my_links=None):
     while True:
         if q.empty():
             break
         else:
             url = q.get()
+            if my_links:
+                for key, value in my_links.items():
+                    if url == value:
+                        name = key
             try:
                 video = pafy.new(url)
                 audio = video.audiostreams
@@ -182,8 +220,13 @@ def run(q, dir_name, var, errors):
                             wma.export(new_name, "mp3")
                             os.chdir(dir_name)
                             os.remove(old_name)
+            except ValueError:
+                if check_fun == 0:
+                    errors.append('Please insert a valid link')
+                else:
+                    errors.append(name)
             except:
-                errors.append(url)
+                errors.append(name)
 
 
 if __name__ == '__main__':
