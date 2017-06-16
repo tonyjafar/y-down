@@ -8,7 +8,6 @@ import platform
 import pydub
 import configparser
 import multiprocessing
-import youtube_dl
 
 
 ###################################################################################
@@ -41,6 +40,7 @@ class YoutubeDownloader:
         self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal",
                                         length=700)
         self.progress.pack(fill=X, padx=5)
+        self.error = False
 
     def open_folder(self):
         if platform.system() == 'Windows':
@@ -86,6 +86,7 @@ class YoutubeDownloader:
     def download_url_from_file(self):
         if self.win:
             self.win.destroy()
+        self.error = False
         self.frame.destroy()
         self.frame = Frame(root, height=25, relief=SUNKEN)
         self.frame.grid(row=3, columnspan=10, sticky="w")
@@ -94,6 +95,9 @@ class YoutubeDownloader:
         self.proc_frame.destroy()
         self.proc_frame = Frame(root, height=20, relief=SUNKEN)
         self.proc_frame.grid(row=4, columnspan=200, sticky='w')
+        self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal",
+                                        length=700)
+        self.progress.pack(fill=BOTH, padx=5)
         my_links = {}
         self.read_config()
         if self.config_file:
@@ -102,26 +106,33 @@ class YoutubeDownloader:
             del self.errors[:]
             self.errors = self.manager.list()
             self.check_fun = 1
-            config = configparser.ConfigParser()
-            config.read(self.config_file)
-            for name, link in config['links'].items():
-                my_links[name] = link
-            self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal",
-                                            length=700)
-            self.progress.pack(fill=BOTH, padx=5)
-            if self.var.get() == 1:
-                var = 1
-            else:
-                var = 0
-            for name in my_links:
-                self.q.put(my_links[name])
-            for i in range(5):
-                self.p = multiprocessing.Process(target=run, args=(self.q, self.dir_name, var, self.errors,
-                                                                   self.check_fun, my_links))
-                self.p_l.append(self.p)
-                self.p.start()
-            self.progress.start()
-            root.after(500, self.process_queue)
+            try:
+                config = configparser.ConfigParser()
+                config.read(self.config_file)
+                for name, link in config['links'].items():
+                    my_links[name] = link
+            except:
+                messagebox.showerror('Error', 'Please provide a correct file')
+                self.frame.destroy()
+                self.frame = Frame(root, height=25, relief=SUNKEN)
+                self.frame.grid(row=3, columnspan=10, sticky="w")
+                l = Label(self.frame, text='Failed!!!', fg='red')
+                l.pack(fill=X, padx=5)
+                self.error = True
+            if not self.error:
+                if self.var.get() == 1:
+                    var = 1
+                else:
+                    var = 0
+                for name in my_links:
+                    self.q.put(my_links[name])
+                for i in range(5):
+                    self.p = multiprocessing.Process(target=run, args=(self.q, self.dir_name, var, self.errors,
+                                                                       self.check_fun, my_links))
+                    self.p_l.append(self.p)
+                    self.p.start()
+                self.progress.start()
+                root.after(500, self.process_queue)
         else:
             l.destroy()
             pass
@@ -226,7 +237,10 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                 else:
                     errors.append(name)
             except:
-                errors.append(name)
+                if check_fun == 0:
+                    errors.append('Error occurred check Internet and/or folder permission.')
+                else:
+                    errors.append(name)
 
 
 if __name__ == '__main__':
