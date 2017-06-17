@@ -139,7 +139,14 @@ class YoutubeDownloader:
 
     def process_queue(self):
         if not self.p.is_alive():
-            self.p.join()
+            if self.check_fun == 0:
+                self.p.join()
+            else:
+                for p in self.p_l:
+                    p.join()
+            self.q.put(self.dir_name)
+            self.p = multiprocessing.Process(target=convert, args=(self.q,))
+            self.p.start()
             if len(self.errors) > 0:
                 self.errors = list(self.errors)
                 if self.check_fun == 0:
@@ -221,15 +228,7 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                     for a in audio:
                         if a.extension == 'm4a':
                             myAudio = a
-                            myAudio.download(filepath=dir_name)
-                            os.chdir(dir_name)
-                            old_name = pafy.new(url, ydl_opts='-i').title + '.m4a'
-                            new_name = video.title + '.mp3'
-                            wma = pydub.AudioSegment.from_file(old_name, "m4a")
-                            os.chdir(dir_name)
-                            wma.export(new_name, "mp3")
-                            os.chdir(dir_name)
-                            os.remove(old_name)
+                        myAudio.download(filepath=dir_name)
             except ValueError:
                 if check_fun == 0:
                     errors.append('Please insert a valid link')
@@ -241,6 +240,20 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                 else:
                     errors.append(name)
 
+
+def convert(q):
+    while True:
+        if q.empty():
+            break
+        else:
+            dir_name = q.get()
+            for file in os.listdir(dir_name):
+                file = os.path.join(dir_name, file)
+                if os.path.isfile(file) and file.endswith("m4a"):
+                    wma = pydub.AudioSegment.from_file(file, "m4a")
+                    new_name = file.replace("m4a", "mp3")
+                    wma.export(new_name, "mp3")
+                    os.remove(file)
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
