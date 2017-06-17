@@ -139,8 +139,7 @@ class YoutubeDownloader:
 
     def process_queue(self):
         if not self.p.is_alive():
-            for p in self.p_l:
-                p.join()
+            self.p.join()
             if len(self.errors) > 0:
                 self.errors = list(self.errors)
                 if self.check_fun == 0:
