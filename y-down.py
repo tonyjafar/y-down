@@ -225,7 +225,7 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                     for a in audio:
                         if a.extension == 'm4a':
                             myAudio = a
-                        myAudio.download(filepath=dir_name)
+                    myAudio.download(filepath=dir_name)
             except ValueError:
                 if check_fun == 0:
                     errors.append('Please insert a valid link')
