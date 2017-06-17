@@ -144,6 +144,7 @@ class YoutubeDownloader:
             self.q.put(self.dir_name)
             self.p = multiprocessing.Process(target=convert, args=(self.q,))
             self.p.start()
+            self.p.join()
             if len(self.errors) > 0:
                 self.errors = list(self.errors)
                 if self.check_fun == 0:
