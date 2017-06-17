@@ -70,9 +70,6 @@ class YoutubeDownloader:
             if self.b:
                 self.b.destroy()
 
-    def update_list(self, link):
-        self.errors.append(link)
-
     def ask_one_multi(self):
         self.win = Toplevel()
         self.win.wm_geometry('300x100')
