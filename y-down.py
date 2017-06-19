@@ -9,7 +9,7 @@ import pydub
 import configparser
 import multiprocessing
 from multiprocessing import freeze_support
-#import sys
+import sys
 
 try:
     if sys.platform.startswith('win'):
