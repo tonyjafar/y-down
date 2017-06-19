@@ -8,6 +8,8 @@ import platform
 import pydub
 import configparser
 import multiprocessing
+from multiprocessing import freeze_support
+#import sys
 
 
 ###################################################################################
@@ -30,17 +32,20 @@ class YoutubeDownloader:
         self.errors = []
         self.win = None
         self.q = multiprocessing.Queue()
-        self.p = multiprocessing.Process()
+        self.multi = multiprocessing
+        self.p = self.multi.Process()
         self.p_l = []
-        self.manager = multiprocessing.Manager()
+        self.manager = self.multi.Manager()
         self.errors = self.manager.list()
         self.check_fun = None
-        self.proc_frame = Frame(root, width=100, relief=SUNKEN)
-        self.proc_frame.grid(row=4, columnspan=200, sticky='w')
-        self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal",
-                                        length=700)
+        self.proc_frame = Frame(root, relief=SUNKEN)
+        self.proc_frame.grid(row=4, column=0, columnspan=200, sticky=N+S+E+W)
+        Grid.rowconfigure(self.proc_frame, 4, weight=1)
+        Grid.columnconfigure(self.proc_frame, 0, weight=1)
+        self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal")
         self.progress.pack(fill=X, padx=5)
         self.error = False
+        self.conv_errors = self.manager.list()
 
     def open_folder(self):
         if platform.system() == 'Windows':
@@ -91,16 +96,18 @@ class YoutubeDownloader:
         l.pack(fill=X, padx=5)
         self.proc_frame.destroy()
         self.proc_frame = Frame(root, height=20, relief=SUNKEN)
-        self.proc_frame.grid(row=4, columnspan=200, sticky='w')
-        self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal",
-                                        length=700)
-        self.progress.pack(fill=BOTH, padx=5)
+        self.proc_frame.grid(row=4, column=0, columnspan=200, sticky=N + S + E + W)
+        Grid.rowconfigure(self.proc_frame, 4, weight=1)
+        Grid.columnconfigure(self.proc_frame, 0, weight=1)
+        self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal")
+        self.progress.pack(fill=X, padx=5)
         my_links = {}
         self.read_config()
         if self.config_file:
             self.save_file()
         if self.dir_name and self.config_file:
             del self.errors[:]
+            del self.conv_errors[:]
             self.errors = self.manager.list()
             self.check_fun = 1
             try:
@@ -135,15 +142,7 @@ class YoutubeDownloader:
             pass
 
     def process_queue(self):
-        if not self.p.is_alive():
-            if self.check_fun == 0:
-                self.p.join()
-            else:
-                for p in self.p_l:
-                    p.join()
-            self.q.put(self.dir_name)
-            self.p = multiprocessing.Process(target=convert, args=(self.q,))
-            self.p.start()
+        if len(self.multi.active_children()) == 1:
             if len(self.errors) > 0:
                 self.errors = list(self.errors)
                 if self.check_fun == 0:
@@ -158,16 +157,39 @@ class YoutubeDownloader:
                 l = Label(self.frame, text='Failed!!!', fg='red')
                 l.pack(fill=X, padx=5)
             else:
+                self.q.put(self.dir_name)
+                self.p = multiprocessing.Process(target=convert, args=(self.q, self.conv_errors))
+                self.p.start()
+                self.frame.destroy()
+                self.frame = Frame(root, height=25, relief=SUNKEN)
+                self.frame.grid(row=3, columnspan=10, sticky="w")
+                l = Label(self.frame, text='Start Converting to MP3...', fg='blue')
+                l.pack(fill=X, padx=5)
+                self.b = Button(root, text='Open Folder', command=self.open_folder)
+                self.b.grid(row=0, column=3, sticky='ws')
+                root.after(500, self.converting_queue)
+        else:
+            root.after(500, self.process_queue)
+
+    def converting_queue(self):
+        if len(self.multi.active_children()) == 1:
+            if len(self.conv_errors) == 0:
                 self.progress.stop()
                 self.frame.destroy()
                 self.frame = Frame(root, height=25, relief=SUNKEN)
                 self.frame.grid(row=3, columnspan=10, sticky="w")
-                l = Label(self.frame, text='Success!!!', fg='green')
+                l = Label(self.frame, text='Sucess!!!', fg='green')
                 l.pack(fill=X, padx=5)
-                self.b = Button(root, text='Open Folder', command=self.open_folder)
-                self.b.grid(row=0, column=3, sticky='ws')
+            else:
+                self.progress.stop()
+                self.frame.destroy()
+                self.frame = Frame(root, height=25, relief=SUNKEN)
+                self.frame.grid(row=3, columnspan=10, sticky="w")
+                l = Label(self.frame, text='Convert Failed!!!', fg='red')
+                l.pack(fill=X, padx=5)
+
         else:
-            root.after(500, self.process_queue)
+            root.after(500, self.converting_queue)
 
     def download_url(self):
         if self.win:
@@ -179,10 +201,11 @@ class YoutubeDownloader:
         l.pack(fill=X, padx=5)
         self.proc_frame.destroy()
         self.proc_frame = Frame(root, width=100, relief=SUNKEN)
-        self.proc_frame.grid(row=4, columnspan=200, sticky='w')
-        self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal",
-                                        length=700)
-        self.progress.pack(fill=BOTH, padx=5)
+        self.proc_frame.grid(row=4, column=0, columnspan=200, sticky=N + S + E + W)
+        Grid.rowconfigure(self.proc_frame, 4, weight=1)
+        Grid.columnconfigure(self.proc_frame, 0, weight=1)
+        self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal")
+        self.progress.pack(fill=X, padx=5)
         self.save_file()
         if self.var.get() == 1:
             var = 1
@@ -190,6 +213,7 @@ class YoutubeDownloader:
             var = 0
         if self.dir_name:
             del self.errors[:]
+            del self.conv_errors[:]
             self.errors = self.manager.list()
             self.check_fun = 0
             myUrl = e1.get()
@@ -238,22 +262,26 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                     errors.append(name)
 
 
-def convert(q):
+def convert(q, con_error):
     while True:
         if q.empty():
             break
         else:
-            dir_name = q.get()
-            for file in os.listdir(dir_name):
-                file = os.path.join(dir_name, file)
-                if os.path.isfile(file) and file.endswith("m4a"):
-                    wma = pydub.AudioSegment.from_file(file, "m4a")
-                    new_name = file.replace("m4a", "mp3")
-                    wma.export(new_name, "mp3")
-                    os.remove(file)
+            try:
+                dir_name = q.get()
+                for file in os.listdir(dir_name):
+                    file = os.path.join(dir_name, file)
+                    if os.path.isfile(file) and file.endswith("m4a"):
+                        wma = pydub.AudioSegment.from_file(file, "m4a")
+                        new_name = file.replace("m4a", "mp3")
+                        wma.export(new_name, "mp3")
+                        os.remove(file)
+            except:
+                con_error.append('1')
 
 if __name__ == '__main__':
-    multiprocessing.freeze_support()
+    freeze_support()
+    #multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
     root = Tk()
     root.title('Youtube Downloader')
     root.grid_columnconfigure(1, weight=1)
