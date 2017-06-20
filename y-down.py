@@ -8,7 +8,6 @@ import platform
 import pydub
 import configparser
 import multiprocessing
-from multiprocessing import freeze_support
 import sys
 
 try:
@@ -303,7 +302,7 @@ def convert(q, con_error):
                 con_error.append('1')
 
 if __name__ == '__main__':
-    freeze_support()
+    multiprocessing.freeze_support()
     #multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
     root = Tk()
     root.title('Youtube Downloader')
