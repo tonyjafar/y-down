@@ -2,13 +2,16 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
+import youtube_dl
 import pafy
 import os
 import platform
-import pydub
 import configparser
-import multiprocessing
 import sys
+
+###################################################################################
+# DO NOT USE TO DOWNLOAD ILLEGAL CONTENT , IT IS ONLY FOR DOWNLOADING FREE CONTENT#
+###################################################################################
 
 try:
     if sys.platform.startswith('win'):
@@ -33,10 +36,23 @@ if sys.platform.startswith('win'):
                     else:
                         os.putenv('_MEIPASS2', '')
 
+
     forking.Popen = _Popen
-###################################################################################
-# DO NOT USE TO DOWNLOAD ILLEGAL CONTENT , IT IS ONLY FOR DOWNLOADING FREE CONTENT#
-###################################################################################
+
+import multiprocessing
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+if hasattr(sys, 'frozen'):
+    if sys.platform.startswith('win'):
+        os.environ['Path'] += ';' + resource_path('binaries')
+import pydub
 
 
 class YoutubeDownloader:
@@ -61,7 +77,7 @@ class YoutubeDownloader:
         self.errors = self.manager.list()
         self.check_fun = None
         self.proc_frame = Frame(root, relief=SUNKEN)
-        self.proc_frame.grid(row=4, column=0, columnspan=200, sticky=N+S+E+W)
+        self.proc_frame.grid(row=4, column=0, columnspan=200, sticky=N + S + E + W)
         Grid.rowconfigure(self.proc_frame, 4, weight=1)
         Grid.columnconfigure(self.proc_frame, 0, weight=1)
         self.progress = ttk.Progressbar(self.proc_frame, orient="horizontal")
@@ -301,9 +317,11 @@ def convert(q, con_error):
             except:
                 con_error.append('1')
 
+
 if __name__ == '__main__':
+
     multiprocessing.freeze_support()
-    #multiprocessing.set_executable(os.path.join(sys.exec_prefix, 'pythonw.exe'))
+
     root = Tk()
     root.title('Youtube Downloader')
     root.grid_columnconfigure(1, weight=1)
@@ -328,8 +346,8 @@ if __name__ == '__main__':
 
 
     def select_all(event=None):
-            e1.select_range(0, END)
-            return "break"
+        e1.select_range(0, END)
+        return "break"
 
 
     def download(event=None):
@@ -345,6 +363,7 @@ if __name__ == '__main__':
     def ask_what_to_do(event=None):
         myapp.ask_one_multi()
         return 'break'
+
 
     file_menu.add_command(label='Download', accelerator='Control+D', command=download)
     file_menu.add_command(label='Insert Config File', accelerator='Control+I', command=download_from_file)
