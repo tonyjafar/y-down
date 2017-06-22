@@ -195,17 +195,27 @@ class YoutubeDownloader:
                 l = Label(self.frame, text='Failed!!!', fg='red')
                 l.pack(fill=X, padx=5)
             else:
-                self.q.put(self.dir_name)
-                self.p = multiprocessing.Process(target=convert, args=(self.q, self.conv_errors))
-                self.p.start()
-                self.frame.destroy()
-                self.frame = Frame(root, height=25, relief=SUNKEN)
-                self.frame.grid(row=3, columnspan=10, sticky="w")
-                l = Label(self.frame, text='Start Converting to MP3...', fg='blue')
-                l.pack(fill=X, padx=5)
-                self.b = Button(root, text='Open Folder', command=self.open_folder)
-                self.b.grid(row=0, column=3, sticky='ws')
-                root.after(500, self.converting_queue)
+                if self.var.get() == 1:
+                    self.progress.stop()
+                    self.frame.destroy()
+                    self.frame = Frame(root, height=25, relief=SUNKEN)
+                    self.frame.grid(row=3, columnspan=10, sticky="w")
+                    l = Label(self.frame, text='Sucess!!!', fg='green')
+                    l.pack(fill=X, padx=5)
+                    self.b = Button(root, text='Open Folder', command=self.open_folder)
+                    self.b.grid(row=0, column=3, sticky='ws')
+                else:
+                    self.q.put(self.dir_name)
+                    self.p = multiprocessing.Process(target=convert, args=(self.q, self.conv_errors))
+                    self.p.start()
+                    self.frame.destroy()
+                    self.frame = Frame(root, height=25, relief=SUNKEN)
+                    self.frame.grid(row=3, columnspan=10, sticky="w")
+                    l = Label(self.frame, text='Start Converting to MP3...', fg='blue')
+                    l.pack(fill=X, padx=5)
+                    self.b = Button(root, text='Open Folder', command=self.open_folder)
+                    self.b.grid(row=0, column=3, sticky='ws')
+                    root.after(500, self.converting_queue)
         else:
             root.after(500, self.process_queue)
 
@@ -292,12 +302,12 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                 if check_fun == 0:
                     errors.append('Please insert a valid link')
                 else:
-                    errors.append(name)
+                    errors.append(name + ' Not Valid')
             except:
                 if check_fun == 0:
-                    errors.append('Error occurred check Internet and/or folder permission.')
+                    errors.append('Error occurred check Internet connection, provided links and/or folder permission.')
                 else:
-                    errors.append(name)
+                    errors.append(name + ' check Internet connection, provided links and/or folder permission.')
 
 
 def convert(q, con_error):
