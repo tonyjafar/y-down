@@ -291,8 +291,9 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                 if "playlist" in url:
                     video = pafy.get_playlist(url)
                     if var == 1:
-                        best = video.getbest()
-                        best.download(filepath=dir_name)
+                        for i in range(len(video['items'])):
+                            best = video['items'][i]['pafy'].getbest()
+                            best.download(filepath=dir_name)
                     else:
                         for i in range(len(video['items'])):
                             # playlist['items'][21]['pafy'].audiostreams
@@ -304,14 +305,14 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                 else:
                     video = pafy.new(url)
                     audio = video.audiostreams
-                if var == 1:
-                    best = video.getbest()
-                    best.download(filepath=dir_name)
-                else:
-                    for a in audio:
-                        if a.extension == 'm4a':
-                            myAudio = a
-                    myAudio.download(filepath=dir_name)
+                    if var == 1:
+                        best = video.getbest()
+                        best.download(filepath=dir_name)
+                    else:
+                        for a in audio:
+                            if a.extension == 'm4a':
+                                myAudio = a
+                        myAudio.download(filepath=dir_name)
             except ValueError as e:
                 print(e)
                 if check_fun == 0:
