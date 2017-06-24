@@ -288,8 +288,22 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                     if url == value:
                         name = key
             try:
-                video = pafy.new(url)
-                audio = video.audiostreams
+                if "playlist" in url:
+                    video = pafy.get_playlist(url)
+                    if var == 1:
+                        best = video.getbest()
+                        best.download(filepath=dir_name)
+                    else:
+                        for i in range(len(video['items'])):
+                            # playlist['items'][21]['pafy'].audiostreams
+                            audio = video['items'][i]['pafy'].audiostreams
+                            for a in audio:
+                                if a.extension == 'm4a':
+                                    myAudio = a
+                            myAudio.download(filepath=dir_name)
+                else:
+                    video = pafy.new(url)
+                    audio = video.audiostreams
                 if var == 1:
                     best = video.getbest()
                     best.download(filepath=dir_name)
@@ -298,12 +312,14 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                         if a.extension == 'm4a':
                             myAudio = a
                     myAudio.download(filepath=dir_name)
-            except ValueError:
+            except ValueError as e:
+                print(e)
                 if check_fun == 0:
                     errors.append('Please insert a valid link')
                 else:
                     errors.append(name + ' Not Valid')
-            except:
+            except Exception as e:
+                print(e)
                 if check_fun == 0:
                     errors.append('Error occurred check Internet connection, provided links and/or folder permission.')
                 else:
