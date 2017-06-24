@@ -1,5 +1,5 @@
 # y-down
-## Downloading Video or MP3 Stream from Youtube.
+## Downloading Video,MP3 one or play list Stream from Youtube.
 ###### Environment:
 1. Python3.* (PyInstaller does not support python3.6 yet)
 2. for installing **pydub** refer to [pydub](https://github.com/jiaaro/pydub#dependencies)
