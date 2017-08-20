@@ -288,7 +288,7 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                     if url == value:
                         name = key
             try:
-                if "playlist" in url:
+                if "list" in url:
                     video = pafy.get_playlist(url)
                     if var == 1:
                         for i in range(len(video['items'])):
