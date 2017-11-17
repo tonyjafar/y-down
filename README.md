@@ -1,4 +1,4 @@
-# y-down
+# Dimaton Youtube Downloader
 ## Downloading Video,MP3 one or play list Stream from Youtube.
 ###### Environment:
 1. Python3.* (PyInstaller does not support python3.6 yet)
