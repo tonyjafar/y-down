@@ -1,0 +1,25 @@
+pipeline{
+    agent {label 'linux'}
+    stages{
+        stage('source'){
+            steps{
+                git 'https://github.com/tonyjafar/y-down.git'
+            }
+        }
+        stage('update_libs'){
+            steps{
+                sh 'sudo pip3 install --upgrade pydub && sudo pip3 install --upgrade pafy && sudo pip3 install --upgrade youtube-dl'
+            }
+        }
+        stage('build'){
+            steps{
+                sh 'python3 -m PyInstaller --onefile y-down.py'
+            }
+        }
+        stage('get_files'){
+            steps{
+                archiveArtifacts artifacts: 'dist/y-down', excludes: '*.exe'
+            }
+        }
+    }
+}
