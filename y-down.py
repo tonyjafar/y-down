@@ -362,7 +362,7 @@ if __name__ == '__main__':
 
     def display_about(event=None):
         messagebox.showinfo("About",
-                            "Created by Tony Jafar\nMob:+49 (0)17663126527")
+                            "Created by Tony Jafar")
 
 
     def exit_app(event=None):
