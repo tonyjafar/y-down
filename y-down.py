@@ -49,6 +49,7 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+
 if hasattr(sys, 'frozen'):
     if sys.platform.startswith('win'):
         os.environ['Path'] += ';' + resource_path('binaries')
@@ -84,6 +85,13 @@ class YoutubeDownloader:
         self.progress.pack(fill=X, padx=5)
         self.error = False
         self.conv_errors = self.manager.list()
+        self.edit_song = None
+
+    def get_song_name(self):
+        self.edit_song = None
+        song = filedialog.askopenfilename(initialdir=os.path.expanduser('~'))
+        if song:
+            self.edit_song = song
 
     def open_folder(self):
         if platform.system() == 'Windows':
@@ -276,6 +284,68 @@ class YoutubeDownloader:
             l.destroy()
             pass
 
+    def cut_songs(self):
+        self.dir_name = None
+        self.edit_song = None
+        win = Toplevel()
+        win.wm_geometry('800x100')
+        win.focus()
+        win.title('Edit One Song')
+        message = 'Please fill all fields'
+        Label(win, text=message).grid(row=0, column=2)
+        Label(win, text='First Seconds', fg='blue').grid(row=3, column=0, sticky='ws')
+        first_entry = Entry(win)
+        first_entry.grid(row=3, column=1, sticky='ws')
+        Label(win, text='Last Seconds', fg='blue').grid(row=3, column=3, sticky='ws')
+        first_entry.focus()
+        last_entry = Entry(win)
+        last_entry.grid(row=3, column=4, sticky='ws')
+        Button(win, text='Song To Edit', command=myapp.get_song_name
+               ).grid(row=6, column=0, sticky='es')
+        Button(win, text='Export Folder', command=myapp.save_file
+               ).grid(row=6, column=3, sticky='es')
+        Button(win, text='Edit Song', command=lambda: self.cut_it(first_entry.get(), last_entry.get())
+               ).grid(row=8, column=0, sticky='ws')
+
+    def cut_it(self, first, last):
+        if (self.dir_name is None and self.edit_song is None) or (first == "" and last == ""):
+            messagebox.showerror("ERROR", "Please Check your entries")
+            return
+        try:
+            song = pydub.AudioSegment.from_mp3(self.edit_song)
+            name = self.edit_song + "_edited.mp3"
+        except Exception as e:
+            messagebox.showerror("ERROR", str(e))
+            return 
+        if first != "" and last != "":
+            try:
+                begin = int(first) * 1000
+                end = int(last) * 1000
+                only_song = song[begin:end]
+                os.chdir(self.dir_name)
+                only_song.export(name, format="mp3")
+                messagebox.showinfo("Success", "The song is successfully edited!")
+            except Exception as e:
+                messagebox.showerror("ERROR", str(e))
+        elif first != "":
+            try:
+                begin = int(first) * 1000
+                only_song = song[begin:]
+                os.chdir(self.dir_name)
+                only_song.export(name, format="mp3")
+                messagebox.showinfo("Success", "The song is successfully edited!")
+            except Exception as e:
+                messagebox.showerror("ERROR", str(e))
+        elif last != "":
+            try:
+                end = int(last) * 1000
+                only_song = song[:end]
+                os.chdir(self.dir_name)
+                only_song.export(name, format="mp3")
+                messagebox.showinfo("Success", "The song is successfully edited!")
+            except Exception as e:
+                messagebox.showerror("ERROR", str(e))
+
 
 def run(q, dir_name, var, errors, check_fun, my_links=None):
     while True:
@@ -389,6 +459,10 @@ if __name__ == '__main__':
         myapp.ask_one_multi()
         return 'break'
 
+    def edit(event=None):
+        myapp.cut_songs()
+        return 'break'
+
 
     file_menu.add_command(label='Download', accelerator='Control+D', command=download)
     file_menu.add_command(label='Insert Config File', accelerator='Control+I', command=download_from_file)
@@ -402,8 +476,10 @@ if __name__ == '__main__':
            ).grid(row=0, column=2, sticky='ws')
     Button(root, text='Download', command=myapp.download_url
            ).grid(row=2, column=0, sticky='ws')
-    Button(root, text='Exit', command=exit_app
+    Button(root, text='Edit', command=myapp.cut_songs
            ).grid(row=2, column=1, sticky='ws')
+    Button(root, text='Exit', command=exit_app
+           ).grid(row=2, column=2, sticky='ws')
     root.protocol('WM_DELETE_WINDOW', exit_app)
     e1.bind('<Control-A>', select_all)
     e1.bind('<Control-a>', select_all)
@@ -411,5 +487,7 @@ if __name__ == '__main__':
     e1.bind('<Control-d>', download)
     e1.bind('<Control-I>', download_from_file)
     e1.bind('<Control-i>', download_from_file)
+    e1.bind('<Control-e>', edit)
+    e1.bind('<Control-E>', edit)
     e1.bind('<Return>', ask_what_to_do)
     root.mainloop()
