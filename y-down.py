@@ -291,21 +291,21 @@ class YoutubeDownloader:
         win.wm_geometry('800x100')
         win.focus()
         win.title('Edit One Song')
-        message = 'Please fill all fields'
-        Label(win, text=message).grid(row=0, column=2)
-        Label(win, text='First Seconds', fg='blue').grid(row=3, column=0, sticky='ws')
+        Label(win, text='First Seconds', fg='blue').grid(row=0, column=0, sticky='w')
         first_entry = Entry(win)
-        first_entry.grid(row=3, column=1, sticky='ws')
-        Label(win, text='Last Seconds', fg='blue').grid(row=3, column=3, sticky='ws')
+        first_entry.grid(row=0, column=1, sticky='ws')
+        Label(win, text='Last Seconds', fg='blue').grid(row=0, column=3, sticky='w')
         first_entry.focus()
         last_entry = Entry(win)
-        last_entry.grid(row=3, column=4, sticky='ws')
+        last_entry.grid(row=0, column=4, sticky='w')
         Button(win, text='Song To Edit', command=myapp.get_song_name
-               ).grid(row=6, column=0, sticky='es')
+               ).grid(row=6, column=0, sticky='w')
         Button(win, text='Export Folder', command=myapp.save_file
-               ).grid(row=6, column=3, sticky='es')
+               ).grid(row=6, column=1, sticky='w')
         Button(win, text='Edit Song', command=lambda: self.cut_it(first_entry.get(), last_entry.get())
-               ).grid(row=8, column=0, sticky='ws')
+               ).grid(row=8, column=0, sticky='w')
+        win.grid_columnconfigure(1, weight=1)
+        win.grid_rowconfigure(1, weight=1)
 
     def cut_it(self, first, last):
         if (self.dir_name is None and self.edit_song is None) or (first == "" and last == ""):
@@ -316,7 +316,7 @@ class YoutubeDownloader:
             name = self.edit_song + "_edited.mp3"
         except Exception as e:
             messagebox.showerror("ERROR", str(e))
-            return 
+            return
         if first != "" and last != "":
             try:
                 begin = int(first) * 1000
@@ -466,6 +466,7 @@ if __name__ == '__main__':
 
     file_menu.add_command(label='Download', accelerator='Control+D', command=download)
     file_menu.add_command(label='Insert Config File', accelerator='Control+I', command=download_from_file)
+    file_menu.add_command(label='Edit Song', accelerator='Control+E', command=edit)
     about_menu.add_command(label='About', command=display_about)
     myapp = YoutubeDownloader()
     Label(root, text='Enter URL', fg='blue').grid(row=0, column=0, sticky='w')
