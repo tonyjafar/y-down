@@ -308,7 +308,7 @@ class YoutubeDownloader:
         win.grid_rowconfigure(1, weight=1)
 
     def cut_it(self, first, last):
-        if (self.dir_name is None and self.edit_song is None) or (first == "" and last == ""):
+        if (self.dir_name is None or self.edit_song is None) or (first == "" and last == ""):
             messagebox.showerror("ERROR", "Please Check your entries")
             return
         try:
