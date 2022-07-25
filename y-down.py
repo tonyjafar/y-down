@@ -398,9 +398,9 @@ def convert(q, con_error):
                 dir_name = q.get()
                 for file in os.listdir(dir_name):
                     file = os.path.join(dir_name, file)
-                    if os.path.isfile(file) and file.endswith("m4a"):
-                        wma = pydub.AudioSegment.from_file(file, "m4a")
-                        new_name = file.replace("m4a", "mp3")
+                    if os.path.isfile(file) and file.endswith("mp4"):
+                        wma = pydub.AudioSegment.from_file(file, "mp4")
+                        new_name = file.replace("mp4", "mp3")
                         wma.export(new_name, "mp3")
                         os.remove(file)
             except:
