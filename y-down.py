@@ -3,7 +3,8 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 import youtube_dl
-import pafy
+from pytube import YouTube
+from pytube import Playlist
 import os
 import platform
 import configparser
@@ -359,36 +360,29 @@ def run(q, dir_name, var, errors, check_fun, my_links=None):
                         name = key
             try:
                 if "list" in url:
-                    video = pafy.get_playlist(url)
+                    v_list = Playlist(url)
                     if var == 1:
-                        for i in range(len(video['items'])):
-                            best = video['items'][i]['pafy'].getbest()
-                            best.download(filepath=dir_name)
+                        for video in v_list.videos:
+                            best = video.streams.first()
+                            best.download(output_path=dir_name)
                     else:
-                        for i in range(len(video['items'])):
-                            # playlist['items'][21]['pafy'].audiostreams
-                            audio = video['items'][i]['pafy'].audiostreams
-                            for a in audio:
-                                if a.extension == 'm4a':
-                                    myAudio = a
-                            myAudio.download(filepath=dir_name)
+                        for video in v_list.videos:
+                            audio = video.streams.filter(only_audio=True).first()
+                            audio.download(output_path=dir_name)
                 else:
-                    video = pafy.new(url)
-                    audio = video.audiostreams
+                    video = YouTube(url)
                     if var == 1:
-                        best = video.getbest()
+                        best = video.streams.first()
                         best.download(filepath=dir_name)
                     else:
-                        for a in audio:
-                            if a.extension == 'm4a':
-                                myAudio = a
-                        myAudio.download(filepath=dir_name)
+                        best = video.streams.filter(only_audio=True).first()
+                        best.download(output_path=dir_name)
             except ValueError:
                 if check_fun == 0:
                     errors.append('Please insert a valid link')
                 else:
                     errors.append(name + ' Not Valid')
-            except:
+            except Exception as e:
                 if check_fun == 0:
                     errors.append('Error occurred check Internet connection, provided links and/or folder permission.')
                 else:
